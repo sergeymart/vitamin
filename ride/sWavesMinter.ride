@@ -1,0 +1,82 @@
+{-# STDLIB_VERSION 5 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+let precision = 10000000000
+
+func keyManagerPublicKey() = getString("managerPublicKey")
+
+func managerPublicKeyOrUnit() = match keyManagerPublicKey() {
+  case s: String => s.fromBase58String()
+  case _: Unit => unit
+}
+
+func mustManager(i: Invocation) = {
+  let pd = "permission denied".throw()
+
+  match managerPublicKeyOrUnit() {
+    case pk: ByteVector => i.callerPublicKey == pk || pd
+    case _: Unit => i.caller == this || pd
+  }
+}
+
+func mustNotInited() = {
+  match getBoolean("inited") {
+    case inited: Boolean => inited == false || throw("Already inited")
+    case _: Unit => false
+  }
+}
+
+@Callable(i)
+func init() = {
+  strict check = mustManager(i)
+  strict inited = mustNotInited()
+
+  let sWaves = Issue("sWaves", "", 0, 8, true, unit, 0)
+  let sWavesAssetId = sWaves.calculateAssetId()
+  [
+    BooleanEntry("inited", true),
+    StringEntry("sWavesAssetId",  sWavesAssetId.toBase58String()),
+    IntegerEntry("ratio", precision),
+    sWaves
+  ]
+}
+
+@Callable(i)
+func stake() = {
+  let payment = i.payments[0]
+  if (payment.assetId != unit) then throw("Only WAVES supported") else
+  if (size(i.payments) != 1) then throw("Wrong payments amount") else
+
+  let ratio = getIntegerValue("ratio")
+  let toReissue = fraction(payment.amount, precision, ratio)
+  let sWavesAssetId = getStringValue("sWavesAssetId").fromBase58String()
+
+  [
+    Reissue(sWavesAssetId, toReissue, true),
+    ScriptTransfer(i.caller, toReissue, sWavesAssetId)
+  ]
+}
+
+@Callable(i)
+func unstake() = {
+  let payment = i.payments[0]
+  let sWavesAssetId = fromBase58String(getStringValue("sWavesAssetId"))
+
+  if (payment.assetId != sWavesAssetId) then throw("Only sWAVES suppoerted") else
+  if (size(i.payments) != 1) then throw("Wrong payments amount") else
+
+  let ratio = getIntegerValue("ratio")
+  let toTransfer = fraction(payment.amount, ratio, precision)
+  let assetId = getStringValue("internalAssetId")
+
+  [
+    Burn(sWavesAssetId, payment.amount),
+    ScriptTransfer(i.caller, toTransfer, unit)
+  ]
+}
+
+
+@Verifier(tx)
+func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+        
