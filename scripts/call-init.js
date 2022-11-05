@@ -1,22 +1,26 @@
 const waves = require('@waves/waves-transactions')
 
-const contractId = "3Mudc2DKz8b3di2jDyxJUPnFQbXmJWAPrxh"
-const seed = "rabbit night song onion parent top spike shrimp success solid jungle drink crane federal illness"
+const seed = "order arrange turn pumpkin ketchup hundred must diary sugar industry distance language unusual trial jelly"
 
 const nodeAddress = 'https://nodes-testnet.wavesnodes.com/'
 
 
 const main = async () => {
 
-  const { keyPair, address } = new waves.seedUtils.Seed(seed)
+  const { keyPair, address } = new waves.seedUtils.Seed(seed, 'T')
 
   const tx = waves.invokeScript({
     "type": 16,
     "version": 2,
     "senderPublicKey": keyPair.publicKey,
-    "dApp": contractId,
+    "dApp": address,
     "call": {
-      "args": [],
+      "args": [
+        {
+          "type": "string",
+          "value": "3Mvs7XMkY63gALNeNQVZeRqMfsHeRoH5T2A"
+        }
+      ],
       "function": "init"
     },
     "payment": [],
