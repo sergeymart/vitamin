@@ -1,0 +1,56 @@
+{-# STDLIB_VERSION 5 #-}
+{-# CONTENT_TYPE DAPP #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+
+func keyManagerPublicKey() = getString("managerPublicKey")
+
+func managerPublicKeyOrUnit() = match keyManagerPublicKey() {
+  case s: String => s.fromBase58String()
+  case _: Unit => unit
+}
+
+func mustManager(i: Invocation) = {
+  let pd = "permission denied".throw()
+
+  match managerPublicKeyOrUnit() {
+    case pk: ByteVector => i.callerPublicKey == pk || pd
+    case _: Unit => i.caller == this || pd
+  }
+}
+
+func mustNotInited() = {
+  match getBoolean("inited") {
+    case inited: Boolean => inited == false || throw("Already inited")
+    case _: Unit => false
+  }
+}
+
+
+@Callable(i)
+func init(mainAddress: String) = {
+  strict checks = [
+    mustManager(i),
+    mustNotInited()
+  ]
+
+  [
+    BooleanEntry("inited", true),
+    StringEntry("mainAddress",  mainAddress)
+  ]
+}
+
+@Callable(i)
+func withdraw(amount: Int) = {
+  let mainAddress = Address(getStringValue("mainAddress").fromBase58String())
+  let regularBalance = wavesBalance(this).regular
+  if (i.caller != mainAddress) then throw("Only main contract can invoke this method") else
+  if (regularBalance < amount) then throw("Not enough Waves to withdraw") else
+  [
+    ScriptTransfer(mainAddress, amount, unit)
+  ]
+}
+
+
+@Verifier(tx)
+func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+

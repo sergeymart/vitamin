@@ -39,6 +39,8 @@ func setLeasedAmount(amount: Int) = {
 }
 
 func lease(amount: Int) = {
+  if (amount == 0) then [] else
+
   let leaserAddress = Address(fromBase58String(getStringValue("leaserAddress")))
   let currentAmount = getIntegerValue("leasedAmount")
   let newAmount = currentAmount + amount
@@ -69,6 +71,33 @@ func sendSWaves(recipient: Address, amount: Int) = {
 
 func sendWaves(recipient: Address, amount: Int) = {
   ScriptTransfer(recipient, amount, unit)
+}
+
+func sWavesQuantity() = {
+  let assetId = getStringValue("sWavesAssetId").fromBase58String()
+  match assetInfo(assetId) {
+    case asset: Asset => asset.quantity
+    case _ => throw("Can't find asset")
+  }
+}
+
+func getMinerBalance() = {
+  let leaserAddress = Address(fromBase58String(getStringValue("leaserAddress")))
+  wavesBalance(leaserAddress).regular
+}
+
+func calculateRatio() = {
+  let leasedAmount = getIntegerValue("leasedAmount")
+  let sWavesTotal = sWavesQuantity()
+  let minerBalance = getMinerBalance()
+  let wavesTotal = leasedAmount + minerBalance
+  fraction(wavesTotal, precision, sWavesTotal)
+}
+
+func withdraw(amount: Int) = {
+  let minerAddress = Address(fromBase58String(getStringValue("leaserAddress")))
+  strict result = invoke(minerAddress, "withdraw", [amount], [])
+  result
 }
 
 @Callable(i)
@@ -103,19 +132,33 @@ func stake() = {
 }
 
 @Callable(i)
-func withdraw() = {
+func unstake() = {
   let payment = i.payments[0]
   let sWavesAssetId = fromBase58String(getStringValue("sWavesAssetId"))
   if (payment.assetId != sWavesAssetId) then throw("Only sWAVES supported") else
   if (size(i.payments) != 1) then throw("Wrong payments amount") else
 
   let ratio = getIntegerValue("ratio")
-  let toTransfer = fraction(payment.amount, ratio, precision)
+  let transferAmount = fraction(payment.amount, ratio, precision)
 
-  lease(-toTransfer) :+ burnSWaves(payment.amount) :+ sendWaves(i.caller, toTransfer)
+  let minerBalance = getMinerBalance()
 
+  let unleaseAmount = if (transferAmount > minerBalance) then transferAmount - minerBalance else 0
+  let withdrawAmount = if (transferAmount > minerBalance) then minerBalance else minerBalance - transferAmount
+
+  strict withdrawResult = withdraw(withdrawAmount)
+
+  lease(-unleaseAmount) :+ burnSWaves(payment.amount) :+ sendWaves(i.caller, transferAmount) 
+}
+
+@Callable(i)
+func compound() = {
+  let ratio = calculateRatio()
+  [
+    IntegerEntry("ratio", ratio)
+  ]
 }
 
 @Verifier(tx)
 func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
-        
+
