@@ -27,10 +27,49 @@ func mustNotInited() = {
   }
 }
 
-# @Callable(i)
-# func debug() = {
-#   [IntegerEntry("leasedAmount",  0)]  
-# }
+func cancelLease() = {
+  match getBinary("leaseId") {
+    case id: ByteVector => [LeaseCancel(id), DeleteEntry("leaseId")]
+    case _: Unit => []
+  }
+}
+
+func setLeasedAmount(amount: Int) = {
+  IntegerEntry("leasedAmount", amount)
+}
+
+func lease(amount: Int) = {
+  let leaserAddress = Address(fromBase58String(getStringValue("leaserAddress")))
+  let currentAmount = getIntegerValue("leasedAmount")
+  let newAmount = currentAmount + amount
+
+  let leaseActions = if (newAmount > 0) then {
+    let newLease = Lease(leaserAddress, newAmount)
+    let newLeaseId = calculateLeaseId(newLease)
+    [newLease, BinaryEntry("leaseId", newLeaseId)]
+  } else []
+
+  cancelLease() ++ leaseActions :+ setLeasedAmount(newAmount)
+}
+
+func issueSWaves(amount: Int) = {
+  let sWavesAssetId = getStringValue("sWavesAssetId").fromBase58String()
+  Reissue(sWavesAssetId, amount, true)
+}
+
+func burnSWaves(amount: Int) = {
+  let sWavesAssetId = getStringValue("sWavesAssetId").fromBase58String()
+  Burn(sWavesAssetId, amount)
+}
+
+func sendSWaves(recipient: Address, amount: Int) = {
+  let sWavesAssetId = getStringValue("sWavesAssetId").fromBase58String()
+  ScriptTransfer(recipient, amount, sWavesAssetId)
+}
+
+func sendWaves(recipient: Address, amount: Int) = {
+  ScriptTransfer(recipient, amount, unit)
+}
 
 @Callable(i)
 func init(leaserAddress: String) = {
@@ -59,65 +98,24 @@ func stake() = {
 
   let ratio = getIntegerValue("ratio")
   let toReissue = fraction(payment.amount, precision, ratio)
-  let sWavesAssetId = getStringValue("sWavesAssetId").fromBase58String()
 
-  let leasedAmount = getIntegerValue("leasedAmount")
-  let newAmount = leasedAmount + payment.amount
-
-  let leaserAddress = Address(fromBase58String(getStringValue("leaserAddress")))
-
-  let lease = Lease(leaserAddress, newAmount)
-  let newLeaseId = calculateLeaseId(lease)
-
-  let results = [
-    BinaryEntry("leaseId", newLeaseId),
-    lease,
-    IntegerEntry("leasedAmount", newAmount),
-    Reissue(sWavesAssetId, toReissue, true),
-    ScriptTransfer(i.caller, toReissue, sWavesAssetId)    
-  ]
-
-  match getBinary("leaseId") {
-    case leaseId: ByteVector => LeaseCancel(leaseId) :: results
-    case _: Unit => results
-  }
-    
+  lease(payment.amount) :+ issueSWaves(toReissue) :+ sendSWaves(i.caller, toReissue)
 }
 
 @Callable(i)
-func unstake() = {
+func withdraw() = {
   let payment = i.payments[0]
   let sWavesAssetId = fromBase58String(getStringValue("sWavesAssetId"))
-
   if (payment.assetId != sWavesAssetId) then throw("Only sWAVES supported") else
   if (size(i.payments) != 1) then throw("Wrong payments amount") else
 
   let ratio = getIntegerValue("ratio")
   let toTransfer = fraction(payment.amount, ratio, precision)
-  let assetId = getStringValue("internalAssetId")
 
-  let leasedAmount = getIntegerValue("leasedAmount")
-  let newAmount = leasedAmount - toTransfer
+  lease(-toTransfer) :+ burnSWaves(payment.amount) :+ sendWaves(i.caller, toTransfer)
 
-
-  let leaseId = getBinaryValue("leaseId")
-
-  let leaseResults = if (newAmount > 0) then {
-    let leaserAddress = Address(fromBase58String(getStringValue("leaserAddress")))
-    let lease = Lease(leaserAddress, newAmount)
-    let newLeaseId = calculateLeaseId(lease)
-    [lease, BinaryEntry("leaseId", newLeaseId), IntegerEntry("leasedAmount", newAmount)]
-  } else [DeleteEntry("leaseId"), IntegerEntry("leasedAmount", 0)]
-
-  let results = [
-    LeaseCancel(leaseId),
-    Burn(sWavesAssetId, payment.amount),
-    ScriptTransfer(i.caller, toTransfer, unit)
-  ]
-
-  results ++ leaseResults
 }
-
 
 @Verifier(tx)
 func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
+        
