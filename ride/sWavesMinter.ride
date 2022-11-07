@@ -34,15 +34,15 @@ func cancelLease() = {
   }
 }
 
-func setLeasedAmount(amount: Int) = {
-  IntegerEntry("leasedAmount", amount)
+func setBalance(amount: Int) = {
+  IntegerEntry("balance", amount)
 }
 
 func lease(amount: Int) = {
   if (amount == 0) then [] else
 
   let leaserAddress = Address(fromBase58String(getStringValue("leaserAddress")))
-  let currentAmount = getIntegerValue("leasedAmount")
+  let currentAmount = getInteger("balance").valueOrElse(0)
   let newAmount = currentAmount + amount
 
   let leaseActions = if (newAmount > 0) then {
@@ -51,7 +51,7 @@ func lease(amount: Int) = {
     [newLease, BinaryEntry("leaseId", newLeaseId)]
   } else []
 
-  cancelLease() ++ leaseActions :+ setLeasedAmount(newAmount)
+  cancelLease() ++ leaseActions :+ setBalance(newAmount)
 }
 
 func issueSWaves(amount: Int) = {
@@ -81,22 +81,28 @@ func sWavesQuantity() = {
   }
 }
 
-func getMinerBalance() = {
+func getExcessWaves() = {
   let leaserAddress = Address(fromBase58String(getStringValue("leaserAddress")))
   wavesBalance(leaserAddress).regular
 }
 
-func calculateRatio() = {
-  let leasedAmount = getIntegerValue("leasedAmount")
+func calculateRate(delta: Int) = {
+  let balance = getIntegerValue("balance")
   let sWavesTotal = sWavesQuantity()
-  let minerBalance = getMinerBalance()
-  let wavesTotal = leasedAmount + minerBalance
+  let wavesTotal = balance + delta
   fraction(wavesTotal, precision, sWavesTotal)
 }
 
-func withdraw(amount: Int) = {
+func setRate(rate: Int) = {
+  [
+    IntegerEntry("rate", rate),
+    IntegerEntry("rateTimestamp", lastBlock.timestamp)
+  ]
+}
+
+func withdraw() = {
   let minerAddress = Address(fromBase58String(getStringValue("leaserAddress")))
-  strict result = invoke(minerAddress, "withdraw", [amount], [])
+  strict result = invoke(minerAddress, "withdraw", [], [])
   result
 }
 
@@ -113,8 +119,8 @@ func init(leaserAddress: String) = {
     BooleanEntry("inited", true),
     StringEntry("sWavesAssetId",  sWavesAssetId.toBase58String()),
     StringEntry("leaserAddress",  leaserAddress),
-    IntegerEntry("ratio", precision),
-    IntegerEntry("leasedAmount", 0),
+    IntegerEntry("rate", precision),
+    IntegerEntry("rateTimestamp", lastBlock.timestamp),
     sWaves
   ]
 }
@@ -125,8 +131,8 @@ func stake() = {
   if (payment.assetId != unit) then throw("Only WAVES supported") else
   if (size(i.payments) != 1) then throw("Wrong payments amount") else
 
-  let ratio = getIntegerValue("ratio")
-  let toReissue = fraction(payment.amount, precision, ratio)
+  let rate = getIntegerValue("rate")
+  let toReissue = fraction(payment.amount, precision, rate)
 
   lease(payment.amount) :+ issueSWaves(toReissue) :+ sendSWaves(i.caller, toReissue)
 }
@@ -138,27 +144,22 @@ func unstake() = {
   if (payment.assetId != sWavesAssetId) then throw("Only sWAVES supported") else
   if (size(i.payments) != 1) then throw("Wrong payments amount") else
 
-  let ratio = getIntegerValue("ratio")
-  let transferAmount = fraction(payment.amount, ratio, precision)
+  let rate = getIntegerValue("rate")
+  let transferAmount = fraction(payment.amount, rate, precision)
 
-  let minerBalance = getMinerBalance()
-
-  let unleaseAmount = if (transferAmount > minerBalance) then transferAmount - minerBalance else 0
-  let withdrawAmount = if (transferAmount > minerBalance) then minerBalance else minerBalance - transferAmount
-
-  strict withdrawResult = withdraw(withdrawAmount)
-
-  lease(-unleaseAmount) :+ burnSWaves(payment.amount) :+ sendWaves(i.caller, transferAmount) 
+  lease(-transferAmount) :+ burnSWaves(payment.amount) :+ sendWaves(i.caller, transferAmount) 
 }
 
 @Callable(i)
 func compound() = {
-  let ratio = calculateRatio()
-  [
-    IntegerEntry("ratio", ratio)
-  ]
+  strict excessWaves = getExcessWaves()
+  strict withdrawResult = withdraw()
+
+  let rate = calculateRate(excessWaves)
+  
+  lease(excessWaves) ++ setRate(excessWaves)
 }
 
 @Verifier(tx)
 func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
-
+        

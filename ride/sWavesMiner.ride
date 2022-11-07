@@ -40,17 +40,16 @@ func init(mainAddress: String) = {
 }
 
 @Callable(i)
-func withdraw(amount: Int) = {
+func withdraw() = {
   let mainAddress = Address(getStringValue("mainAddress").fromBase58String())
   let regularBalance = wavesBalance(this).regular
   if (i.caller != mainAddress) then throw("Only main contract can invoke this method") else
-  if (regularBalance < amount) then throw("Not enough Waves to withdraw") else
   [
-    ScriptTransfer(mainAddress, amount, unit)
+    ScriptTransfer(mainAddress, regularBalance, unit)
   ]
 }
 
 
 @Verifier(tx)
 func verify() = sigVerify(tx.bodyBytes, tx.proofs[0], tx.senderPublicKey)
-
+        
