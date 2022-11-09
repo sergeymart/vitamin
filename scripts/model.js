@@ -25,7 +25,7 @@ const compound = () => {
 
   lastRate += tokenRatePerSec * dt
   lastTimestamp = Date.now()
-  tokenRatePerSec = (mined / sWaves * precision) / dt
+  tokenRatePerSec = (mined / sWaves * precision) / 86400 // speed up in 1000 times
 
   balance += mined
   mined = 0
@@ -61,7 +61,7 @@ const log = () => {
     `RealRate: ${(realRate() / precision).toFixed(decimals)}`,
     `CmpRate: ${(cmpRate / precision).toFixed(decimals)}`,
     `ExchangeRate: ${(currentRate / precision).toFixed(decimals)}`,
-    `TokenRate: ${((tokenRatePerSec * 1000) / precision).toFixed(decimals)}`,
+    `TokenRate: ${((tokenRatePerSec * 1000) / precision).toFixed(8)}`,
     `Balance: ${balance.toFixed(decimals)}`,
     `sWaves: ${sWaves.toFixed(decimals)}`,
     `Mined: ${mined.toFixed(decimals)}`,

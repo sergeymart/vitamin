@@ -104,7 +104,7 @@ func withdraw() = {
   result
 }
 
-func currentRate(dt:Int) = {
+func currentRate(dt: Int) = {
   getIntegerValue("lastRate") + getIntegerValue("growthRate") * dt
 }
 
@@ -143,7 +143,7 @@ func compound() = {
   let rate = currentRate(dt)
   strict excessWaves = getExcessWaves()
   
-  let growthRate = fraction(excessWaves, precision, sWavesTotal) / dt
+  let growthRate = fraction(excessWaves, precision, sWavesTotal) / 86400000
 
   strict withdrawResult = withdraw()
   
