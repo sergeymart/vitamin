@@ -1,6 +1,6 @@
 const waves = require('@waves/waves-transactions')
 
-const seed = "order arrange turn pumpkin ketchup hundred must diary sugar industry distance language unusual trial jelly"
+const seed = "start example lesson matter nurse bean option judge nothing angle surge hungry symptom expand bullet"
 
 const nodeAddress = 'https://nodes-testnet.wavesnodes.com/'
 
@@ -18,7 +18,7 @@ const main = async () => {
       "args": [
         {
           "type": "string",
-          "value": "3Mvs7XMkY63gALNeNQVZeRqMfsHeRoH5T2A"
+          "value": "3N29B91KwMtcqXP9uXzEi1Re9nRHmCiC8sp"
         }
       ],
       "function": "init"
