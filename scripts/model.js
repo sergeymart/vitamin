@@ -23,6 +23,7 @@ const compound = () => {
     return
   }
 
+
   lastRate += tokenRatePerSec * dt
   lastTimestamp = Date.now()
   tokenRatePerSec = (mined / sWaves * precision) / 86400 // speed up in 1000 times

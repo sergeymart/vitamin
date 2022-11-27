@@ -1,0 +1,26 @@
+{
+  "name": "vitamin",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sergeymart/vitamin.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sergeymart/vitamin/issues"
+  },
+  "homepage": "https://github.com/sergeymart/vitamin#readme",
+  "dependencies": {
+    "@waves/surfboard": "^2.3.1-beta.1",
+    "@waves/waves-transactions": "^4.2.10",
+    "bignumber.js": "^9.1.0",
+    "moment": "^2.29.4"
+  }
+}

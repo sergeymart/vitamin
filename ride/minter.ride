@@ -72,7 +72,11 @@ func mustAdmin(i: Invocation) = {
 func currentTimestampSec() = lastBlock.timestamp / 1000
 
 func dt() = {
-  minv(currentTimestampSec(), periodFinish())
+  if (currentTimestampSec() < periodFinish()) then {
+    currentTimestampSec() - lastCompoundTime()
+  } else {
+    DURATION
+  }
 }
 
 ##### Update functions #####
@@ -130,6 +134,15 @@ func lease(_amount: Int) = {
   updateLease(newAmount)
   ++
   updateBalance(newAmount)
+}
+
+func debug(i: Invocation, a:Int, b: Int, c: Int) = {
+  let id = i.transactionId.toBase58String()
+  [
+    IntegerEntry("rate" + id, a),
+    IntegerEntry("growth" + id, b),
+    IntegerEntry("dt" + id, c)
+  ]
 }
 
 func issueSWaves(_amount: Int) = {
@@ -224,7 +237,9 @@ func compound() = {
       let leftover = growthRate() * remainingTime
       divp(excessWaves + leftover, DECIMALS) / DURATION
     }
-    
+
+    debug(i, lastRate(),growthRate(), dt())
+    ++
     lease(excessWaves)
     ++
     updateRate(newRate, newGrowthRate)
@@ -237,11 +252,12 @@ func compound() = {
 func stake() = {
   strict doCompound = invoke(this, "compound", [], [])
 
+  let rate = currentRate()
+
   let payment = i.payments[0]
   if (payment.assetId != unit) then throw("Only WAVES supported") else
   if (size(i.payments) != 1) then throw("Wrong payments amount") else
 
-  let rate = currentRate()
   let toReissue = divp(payment.amount, rate)
 
   lease(payment.amount)
@@ -255,11 +271,11 @@ func stake() = {
 func unstake() = {
   strict doCompound = invoke(this, "compound", [], [])
 
+  let rate = currentRate()
+
   let payment = i.payments[0]
   if (payment.assetId != sWavesAsset()) then throw("Only sWAVES supported") else
   if (size(i.payments) != 1) then throw("Wrong payments amount") else
-
-  let rate = currentRate()
 
   let transferAmount = mulp(payment.amount, rate)
 

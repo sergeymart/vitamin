@@ -1,0 +1,11 @@
+const DECIMALS = 1e8
+const PRECISION = 1e18
+const DURATION = 86400000
+const DURATION_SEC = 86400
+
+module.exports = {
+  DECIMALS,
+  PRECISION,
+  DURATION,
+  DURATION_SEC
+}
