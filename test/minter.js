@@ -169,12 +169,7 @@ describe('ROOT', () => {
             const unstakedAmount = changes.transfers[0].amount
 
             const currentRate = await e.minter.getCurrentRate()
-
-            console.log(currentRate, amount)
             const expectedWaves = new BigNumber(amount * DECIMALS).times(currentRate).div(PRECISION).toNumber()
-
-
-            console.log(changes.transfers[0], expectedWaves)
 
             expect(expectedWaves).equal(unstakedAmount)
 
