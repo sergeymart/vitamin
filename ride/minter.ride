@@ -136,15 +136,6 @@ func lease(_amount: Int) = {
   updateBalance(newAmount)
 }
 
-func debug(i: Invocation, a:Int, b: Int, c: Int) = {
-  let id = i.transactionId.toBase58String()
-  [
-    IntegerEntry("rate" + id, a),
-    IntegerEntry("growth" + id, b),
-    IntegerEntry("dt" + id, c)
-  ]
-}
-
 func issueSWaves(_amount: Int) = {
   [
     Reissue(sWavesAsset(), _amount, true)
@@ -238,8 +229,6 @@ func compound() = {
       divp(excessWaves + leftover, DECIMALS) / DURATION
     }
 
-    debug(i, lastRate(),growthRate(), dt())
-    ++
     lease(excessWaves)
     ++
     updateRate(newRate, newGrowthRate)

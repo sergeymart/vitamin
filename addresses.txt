@@ -9,3 +9,14 @@ year bind volume submit sad maze grace rude wait range evoke dose provide setup 
 Leaser
 address: 3Mvs7XMkY63gALNeNQVZeRqMfsHeRoH5T2A
 blame wish broccoli liberty market reward oil amount peasant group embrace fragile dog account olympic
+
+
+Local node
+
+rich account:
+Seed text:           waves private node seed with waves tokens
+Seed:                TBXHUUcVx2n3Rgszpu5MCybRaR86JGmqCWp7XKh7czU57ox5dgjdX4K4
+Account seed:        HewBh5uTNEGLVpmDPkJoHEi5vbZ6uk7fjKdP5ghiXKBs
+Private account key: 83M4HnCQxrDMzUQqwmxfTVJPTE9WdE7zjAooZZm2jCyV
+Public account key:  AXbaBkJNocyrVpwqTzD4TpUY8fQ6eeRto9k1m2bNCzXV
+Account address:     3M4qwDomRabJKLZxuXhwfqLApQkU592nWxF
