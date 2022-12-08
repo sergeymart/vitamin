@@ -4,7 +4,7 @@
 
 
 ##### Core constants #####
-let PRECISION = 1000000000000000000 # 1e18
+let PRECISION = 10000000000000000 # 1e16
 let DURATION = 60 * 60 * 24 # 1 day
 let DECIMALS = 100000000 # 1e8
 
@@ -202,6 +202,8 @@ func init(
       StringEntry(k_stkWavesAsset,  stkWavesAssetId.toBase58String()),
       StringEntry(k_minerAddress,  _minerAddress),
       IntegerEntry(k_lastRate, PRECISION),
+      IntegerEntry(k_growthRate, 0),
+      IntegerEntry(k_lastCompoundTime, 0),
       stkWaves
     ]
   }

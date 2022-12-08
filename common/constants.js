@@ -1,5 +1,5 @@
 const DECIMALS = 1e8
-const PRECISION = 1e18
+const PRECISION = 1e16
 const DURATION = 86400000
 const DURATION_SEC = 86400
 

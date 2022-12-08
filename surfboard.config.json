@@ -3,9 +3,9 @@
     "test_directory": "test",
     "envs": {
         "testnet": {
-            "API_BASE": "https://nodes-testnet.wavesnodes.com/",
+            "API_BASE": "https://nodes-testnet.wavesnodes.com",
             "CHAIN_ID": "T",
-            "SEED": "property step next window what borrow dwarf acquire that glue sea spawn pool street ivory",
+            "SEED": "security wood athlete follow business dice canvas foot runway pass system century shift wrong ask",
             "timeout": 60000
         },
         "custom": {
