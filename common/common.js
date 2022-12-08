@@ -193,8 +193,8 @@ class Minter {
     return value
   }
 
-  async getSWavesAssetId() {
-    const key = 'k_sWavesAssetId'
+  async getStkWavesAssetId() {
+    const key = 'k_stkWavesAssetId'
     return this.getKey(key)
   }
 
@@ -265,7 +265,7 @@ class Minter {
   }
 
   async unstake(_amount) {
-    const assetId = await this.getSWavesAssetId()
+    const assetId = await this.getStkWavesAssetId()
     const tx = await invokeScript({
       dApp: address(this.address),
       call: {

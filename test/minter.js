@@ -87,10 +87,10 @@ describe('ROOT', () => {
     })
 
     describe('STAKER 1 stake', () => {
-        it('Should stake 1 Waves and get 1 sWaves', async () => {
-            const sWavesAssetId = await e.minter.getSWavesAssetId()
+        it('Should stake 1 Waves and get 1 stkWaves', async () => {
+            const stkWavesAssetId = await e.minter.getStkWavesAssetId()
             await e.minter.as(accounts.staker1).stake(1)
-            const amount = await assetBalance(sWavesAssetId, address(accounts.staker1))
+            const amount = await assetBalance(stkWavesAssetId, address(accounts.staker1))
             expect(amount).equal(DECIMALS)
         })
         it('Should store 1 Waves to k_balance', async () => {
@@ -120,11 +120,11 @@ describe('ROOT', () => {
     })
 
     describe('STAKER 1 unstake', () => {
-        it('Should receive 1.5 Waves for 1 sWaves after 12 hours', async () => {
+        it('Should receive 1.5 Waves for 1 stkWaves after 12 hours', async () => {
             await e.setTime(now + DURATION / 2)
-            const sWavesAssetId = await e.minter.getSWavesAssetId()
+            const stkWavesAssetId = await e.minter.getStkWavesAssetId()
 
-            const amount = await assetBalance(sWavesAssetId, address(accounts.staker1))
+            const amount = await assetBalance(stkWavesAssetId, address(accounts.staker1))
 
             const unstakeTx = await e.minter.as(accounts.staker1).unstake(1)
 
@@ -143,25 +143,25 @@ describe('ROOT', () => {
     })
 
     describe('STAKER 2 calculations', () => {
-        it('Shoud stake 1 Waves and get 0.66666667 sWaves', async () => {
+        it('Shoud stake 1 Waves and get 0.66666667 stkWaves', async () => {
             const stakeTx = await e.minter.as(accounts.staker2).stake(1)
             const changes = await stateChanges(stakeTx.id)
 
             const currentRate = await e.minter.getCurrentRate()
 
-            const expectedSWaves = new BigNumber(DECIMALS).times(PRECISION).dividedBy(currentRate).toNumber()
+            const expectedStkWaves = new BigNumber(DECIMALS).times(PRECISION).dividedBy(currentRate).toNumber()
 
-            const receivedSWaves = changes.transfers[0].amount
+            const receivedStkWaves = changes.transfers[0].amount
 
-            expect(expectedSWaves).equal(receivedSWaves)
+            expect(expectedStkWaves).equal(receivedStkWaves)
         })
         // @todo check rate and ts keys
         it('Should receive +0.5 Waves when unstake after 1 day', async () => {
             await e.setTime(now + DURATION)
 
-            const sWavesAssetId = await e.minter.getSWavesAssetId()
-            const sWavesBalance = await assetBalance(sWavesAssetId, address(accounts.staker2))
-            const amount = (sWavesBalance / DECIMALS).toFixed(8)
+            const stkWavesAssetId = await e.minter.getStkWavesAssetId()
+            const stkWavesBalance = await assetBalance(stkWavesAssetId, address(accounts.staker2))
+            const amount = (stkWavesBalance / DECIMALS).toFixed(8)
 
             const unstakeTx = await e.minter.as(accounts.staker2).unstake(amount)
             const changes = await stateChanges(unstakeTx.id)

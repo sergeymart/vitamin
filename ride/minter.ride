@@ -25,7 +25,7 @@ let k_initialized = "k_initialized"
 let k_adminPublicKey = "k_adminPublicKey" 
 let k_adminAddress = "k_adminAddress"  
 let k_minerAddress = "k_minerAddress"
-let k_sWavesAsset = "k_sWavesAssetId"
+let k_stkWavesAsset = "k_stkWavesAssetId"
 
 ##### Common funcs #####
 func divd(_x: Int, _y: Int) = fraction(_x, DECIMALS, _y, HALFEVEN)
@@ -40,7 +40,7 @@ func toCompositeKey(_key: String, _address: String) = _key + "_" + _address
 func adminAddress() = addressFromString(this.getStringValue(k_adminAddress))
 func adminPublicKey() = fromBase58String(this.getStringValue(k_adminPublicKey))
 func minerAddress() = addressFromString(this.getStringValue(k_minerAddress)).valueOrErrorMessage("Invalid miner address is not set")
-func sWavesAsset() = this.getStringValue(k_sWavesAsset).fromBase58String()
+func stkWavesAsset() = this.getStringValue(k_stkWavesAsset).fromBase58String()
 
 ##### Accessor functions #####
 func initialized() = this.getBoolean(k_initialized).valueOrElse(false)
@@ -136,24 +136,24 @@ func lease(_amount: Int) = {
   updateBalance(newAmount)
 }
 
-func issueSWaves(_amount: Int) = {
+func issueStkWaves(_amount: Int) = {
   [
-    Reissue(sWavesAsset(), _amount, true)
+    Reissue(stkWavesAsset(), _amount, true)
   ]
 }
 
-func burnSWaves(_amount: Int) = {
+func burnStkWaves(_amount: Int) = {
   [
-    Burn(sWavesAsset(), _amount)
+    Burn(stkWavesAsset(), _amount)
   ]
 }
 
-func sendSWaves(
+func sendStkWaves(
   _recipient: Address,
   _amount: Int
 ) = {
   [
-    ScriptTransfer(_recipient, _amount, sWavesAsset())
+    ScriptTransfer(_recipient, _amount, stkWavesAsset())
   ]
 }
 
@@ -166,8 +166,8 @@ func sendWaves(
   ]
 }
 
-func sWavesQuantity() = {
-  match assetInfo(sWavesAsset()) {
+func stkWavesQuantity() = {
+  match assetInfo(stkWavesAsset()) {
     case asset: Asset => asset.quantity
     case _ => throw("Can't find asset")
   }
@@ -195,14 +195,14 @@ func init(
   if (initialized()) then {
     throw("Already initialized")
   } else {
-    let sWaves = Issue("sWaves", "", 0, 8, true, unit, 0)
-    let sWavesAssetId = sWaves.calculateAssetId()
+    let stkWaves = Issue("stkWaves", "", 0, 8, true, unit, 0)
+    let stkWavesAssetId = stkWaves.calculateAssetId()
     [
       BooleanEntry(k_initialized, true),
-      StringEntry(k_sWavesAsset,  sWavesAssetId.toBase58String()),
+      StringEntry(k_stkWavesAsset,  stkWavesAssetId.toBase58String()),
       StringEntry(k_minerAddress,  _minerAddress),
       IntegerEntry(k_lastRate, PRECISION),
-      sWaves
+      stkWaves
     ]
   }
 }
@@ -251,9 +251,9 @@ func stake() = {
 
   lease(payment.amount)
   ++
-  issueSWaves(toReissue)
+  issueStkWaves(toReissue)
   ++
-  sendSWaves(i.caller, toReissue)
+  sendStkWaves(i.caller, toReissue)
 }
 
 @Callable(i)
@@ -263,14 +263,14 @@ func unstake() = {
   let rate = currentRate()
 
   let payment = i.payments[0]
-  if (payment.assetId != sWavesAsset()) then throw("Only sWAVES supported") else
+  if (payment.assetId != stkWavesAsset()) then throw("Only stkWaves supported") else
   if (size(i.payments) != 1) then throw("Wrong payments amount") else
 
   let transferAmount = mulp(payment.amount, rate)
 
   lease(-transferAmount)
   ++
-  burnSWaves(payment.amount)
+  burnStkWaves(payment.amount)
   ++
   sendWaves(i.caller, transferAmount) 
 }

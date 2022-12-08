@@ -1,9 +1,8 @@
 const waves = require('@waves/waves-transactions')
 
-const seed = "gossip security fiscal audit gather act fade lottery sponsor retire brick slogan black produce guide"
+const seed = "actual nerve limit win east legal garage define order eye state endless enter erase flat"
 
 const nodeAddress = 'https://nodes-testnet.wavesnodes.com/'
-
 
 const main = async () => {
 
@@ -18,13 +17,13 @@ const main = async () => {
       "args": [
         {
           "type": "string",
-          "value": "3N5EQFDYkcDYtBAJco5pBXiHywKZj1bAfmY"
+          "value": "3Mtxa8ryD7D8A53ojJzSLYGRT7rqRSQDLpi"
         }
       ],
-      "function": "init"
+      "function": "compound"
     },
     "payment": [],
-    "fee": "100900000",
+    "fee": "900000",
     "feeAssetId": null,
     "timestamp": Date.now(),
     "chainId": 'T'.charCodeAt(0),
