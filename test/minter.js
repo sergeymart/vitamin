@@ -115,7 +115,7 @@ describe('ROOT', () => {
             await e.setTime(now)
             await e.minter.compound()
             const kGrowthRate = await e.minter.getGrowthRate()
-            expect(+kGrowthRate).equal(Math.round(PRECISION / DURATION_SEC))
+            expect(+kGrowthRate).to.be.closeTo(Math.round(PRECISION / DURATION_SEC), 1)
         })
     })
 
